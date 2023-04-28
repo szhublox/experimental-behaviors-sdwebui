@@ -124,12 +124,12 @@ class WarpClip:
 
 class Script(scripts.Script):
     def __init__(self):
-        self.modules = {}
-        self.modules['denoise_dest'] = DenoiseDest()
-        self.modules['disable_mean'] = DisableMean()
-        self.modules['latent_cpu'] = LatentCPU()
-        self.modules['skip_steps'] = SkipSteps()
-        self.modules['warp_clip'] = WarpClip()
+        self.modules = {'denoise_dest': DenoiseDest(),
+                        'disable_mean': DisableMean(),
+                        'latent_cpu': LatentCPU(),
+                        'skip_steps': SkipSteps(),
+                        'warp_clip': WarpClip()
+                        }
 
     def title(self):
         return "Experimental Behaviors"
