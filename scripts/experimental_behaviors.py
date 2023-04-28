@@ -104,15 +104,12 @@ class LatentCPU:
 
 class SkipSteps:
     def clean_stop(self, params: script_callbacks.CFGDenoiserParams):
-        try:
-            if params.sampling_step == self.stop_at:
-                def new_combine_denoised(x_out, conds_list, uncond,
-                                         cond_scale):
-                    return x_out[0:uncond.shape[0]]
-                self.sampler.model_wrap_cfg.combine_denoised \
-                    = new_combine_denoised
-        except:
-            pass
+        if params.sampling_step == self.stop_at:
+            def new_combine_denoised(x_out, conds_list, uncond,
+                                     cond_scale):
+                return x_out[0:uncond.shape[0]]
+            self.sampler.model_wrap_cfg.combine_denoised \
+                = new_combine_denoised
 
     def __init__(self):
         self.orig_create_sampler = sd_samplers.create_sampler
