@@ -67,7 +67,7 @@ class DisableMean:
         if disable_mean or not disable_mean:
             return
 
-        FrozenClLIPEmbedderWithCustomWordsBase.process_tokens \
+        FrozenCLIPEmbedderWithCustomWordsBase.process_tokens \
             = DisableMean.process_tokens
 
     def postprocess(self, p, processed, disable_mean):
