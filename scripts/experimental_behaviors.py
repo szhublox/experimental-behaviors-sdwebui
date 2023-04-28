@@ -18,28 +18,27 @@ class DenoiseDest:
 
         return denoised
 
-    def __init__(self):
-        self.orig_create_sampler = sd_samplers.create_sampler
+    def replace_combine(self, params: script_callbacks.CFGDenoiserParams):
+        if self.reverse_fraction \
+                <= params.sampling_step / params.total_sampling_steps:
+            self.p.sampler.model_wrap_cfg.combine_denoised \
+                = DenoiseDest.new_combine_denoised
 
     def ui(self, is_img2img):
-        return [gr.Checkbox(False, label="Reverse denoising destination")]
+        return [gr.Slider(minimum=0.0, maximum=1.0, step=0.01, value=0,
+                          label="Reverse denoise for final progress")]
 
     def process(self, p, reverse_denoise):
-        if reverse_denoise is None or not reverse_denoise:
+        if reverse_denoise is None or reverse_denoise == 0.0:
             return
 
-        self.current_create_sampler = sd_samplers.create_sampler
+        self.reverse_fraction = 1 + (-reverse_denoise)
 
-        def new_create_sampler(name, model):
-            sampler = self.current_create_sampler(name, model)
-            sampler.model_wrap_cfg.combine_denoised \
-                = DenoiseDest.new_combine_denoised
-            return sampler
-
-        sd_samplers.create_sampler = new_create_sampler
+        self.p = p
+        script_callbacks.on_cfg_denoised(self.replace_combine)
 
     def postprocess(self, p, processed, reverse_denoise):
-        sd_samplers.create_sampler = self.orig_create_sampler
+        script_callbacks.remove_callbacks_for_function(self.replace_combine)
 
 
 class DisableMean:
@@ -164,7 +163,8 @@ class WarpClip:
                            value="Unmodified")]
 
     def process(self, p, pos_ids_mod):
-        if pos_ids_mod is None or pos_ids_mod == next(iter(WarpClip.POS_IDS)):
+        if pos_ids_mod is None or pos_ids_mod == next(iter(WarpClip.POS_IDS)) \
+                or pos_ids_mod == 0:
             return
 
         self.clip_backup = shared.sd_model.cond_stage_model.wrapped.transformer.text_model.embeddings.position_ids
@@ -204,6 +204,6 @@ class Script(scripts.Script):
         for i, experiment in enumerate(self.experiments):
             self.experiments[i].process(p, args[i])
 
-    def postprocess(self, p, *args):
+    def postprocess(self, p, processed, *args):
         for i, experiment in enumerate(self.experiments):
-            self.experiment[i].process(p, args[i])
+            self.experiments[i].postprocess(p, processed, args[i])
