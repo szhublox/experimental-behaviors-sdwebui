@@ -18,7 +18,7 @@ class DualDenoise:
         return gr.Checkbox(label="Cond/uncond is processed every step and the mean returned")
 
     def process(self, p, dual_denoise):
-        if dual_denoise is None and not dual_denoise and reverse_denoise > 10:
+        if dual_denoise is None and not dual_denoise:   #  and reverse_denoise > 0
             return
 
         def new_create_sampler(name, model):
