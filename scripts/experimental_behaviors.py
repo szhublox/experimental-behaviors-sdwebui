@@ -20,28 +20,27 @@ class DenoiseDest:
 
         return denoised
 
-    def __init__(self):
-        self.orig_create_sampler = sd_samplers.create_sampler
+    def replace_combine(self, params: script_callbacks.CFGDenoiserParams):
+        if self.reverse_fraction \
+                <= params.sampling_step / params.total_sampling_steps:
+            self.p.sampler.model_wrap_cfg.combine_denoised \
+                = DenoiseDest.new_combine_denoised
 
     def ui(self, is_img2img):
-        return [gr.Checkbox(False, label="Reverse denoising destination")]
+        return [gr.Slider(minimum=0.0, maximum=1.0, step=0.01, value=0,
+                          label="Reverse denoise for final progress")]
 
     def process(self, p, reverse_denoise):
-        if reverse_denoise is None or not reverse_denoise:
+        if reverse_denoise is None or reverse_denoise == 0.0:
             return
 
-        self.current_create_sampler = sd_samplers.create_sampler
+        self.reverse_fraction = 1 + (-reverse_denoise)
 
-        def new_create_sampler(name, model):
-            sampler = self.current_create_sampler(name, model)
-            sampler.model_wrap_cfg.combine_denoised \
-                = DenoiseDest.new_combine_denoised
-            return sampler
-
-        sd_samplers.create_sampler = new_create_sampler
+        self.p = p
+        script_callbacks.on_cfg_denoised(self.replace_combine)
 
     def postprocess(self, p, processed, reverse_denoise):
-        sd_samplers.create_sampler = self.orig_create_sampler
+        script_callbacks.remove_callbacks_for_function(self.replace_combine)
 
 
 class SkipSteps:
@@ -106,7 +105,8 @@ class WarpClip:
                            value="Unmodified")]
 
     def process(self, p, pos_ids_mod):
-        if pos_ids_mod is None or pos_ids_mod == next(iter(WarpClip.POS_IDS)):
+        if pos_ids_mod is None or pos_ids_mod == next(iter(WarpClip.POS_IDS)) \
+                or pos_ids_mod == 0:
             return
 
         self.clip_backup = shared.sd_model.cond_stage_model.wrapped.transformer.text_model.embeddings.position_ids
@@ -122,14 +122,12 @@ class WarpClip:
             self.clip_backup = None
 
 
+experiments = [DenoiseDest, DisableMean, LatentCPU, SkipSteps, WarpClip]
+
+
 class Script(scripts.Script):
     def __init__(self):
-        self.modules = {'denoise_dest': DenoiseDest(),
-                        'disable_mean': DisableMean(),
-                        'latent_cpu': LatentCPU(),
-                        'skip_steps': SkipSteps(),
-                        'warp_clip': WarpClip()
-                        }
+        self.experiments = [init() for init in experiments]
 
     def title(self):
         return "Experimental Behaviors"
@@ -137,42 +135,17 @@ class Script(scripts.Script):
     def ui(self, is_img2img):
         with gr.Accordion(self.title(), open=False):
             elements = []
-            for module in self.modules.values():
-                elements += module.ui(is_img2img)
+            for experiment in self.experiments:
+                elements += experiment.ui(is_img2img)
             return elements
 
     def show(self, is_img2img):
         return scripts.AlwaysVisible
 
-    def process(self, p, reverse_denoise, disable_mean, latent_cpu,
-                skip_steps, pos_ids_mod):
-        self.modules['denoise_dest'].process(p, reverse_denoise)
-        self.modules['disable_mean'].process(p, disable_mean)
-        self.modules['latent_cpu'].process(p, latent_cpu)
-        self.modules['skip_steps'].process(p, skip_steps)
-        self.modules['warp_clip'].process(p, pos_ids_mod)
+    def process(self, p, *args):
+        for i, experiment in enumerate(self.experiments):
+            self.experiments[i].process(p, args[i])
 
-    def postprocess(self, p, processed, reverse_denoise, disable_mean,
-                    latent_cpu, skip_steps, pos_ids_mod):
-        self.modules['denoise_dest'].postprocess(p, processed, reverse_denoise)
-        self.modules['disable_mean'].postprocess(p, processed, disable_mean)
-        self.modules['latent_cpu'].postprocess(p, processed, latent_cpu)
-        self.modules['skip_steps'].postprocess(p, processed, skip_steps)
-        self.modules['warp_clip'].postprocess(p, processed, pos_ids_mod)
-
-    # def process(self, p, *args):
-    #     for arg in args:
-    #         if not isinstance(arg, (list, tuple)):
-    #             continue
-    #         module_name, arg_value = arg
-    #         self.modules[module_name].process(p, arg_value)
-    #
-    # def postprocess(self, p, processed, *args):
-    #     for arg in args:
-    #         if not isinstance(arg, (list, tuple)):
-    #             continue
-    #         module_name, arg_value = arg
-    #         self.modules[module_name].postprocess(p, processed, arg_value)
-
-
-
+    def postprocess(self, p, processed, *args):
+        for i, experiment in enumerate(self.experiments):
+            self.experiments[i].postprocess(p, processed, args[i])
