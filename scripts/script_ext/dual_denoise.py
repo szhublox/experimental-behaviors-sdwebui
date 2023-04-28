@@ -1,8 +1,6 @@
 import torch
 import gradio as gr
-from modules import sd_samplers, script_callbacks
-
-# orig_create_sampler = sd_samplers.create_sampler
+from modules import script_callbacks
 
 
 class DualDenoise:
@@ -37,10 +35,11 @@ class DualDenoise:
         self.p.sampler.model_wrap_cfg.combine_denoised = DualDenoise.new_combine_denoised
 
     def ui(self, is_img2img):
-        return [gr.Checkbox(label="Cond/uncond is processed every step and the mean returned")]
+        dual_denoise = gr.Checkbox(label="Cond/uncond is processed every step and the mean returned")
+        return [dual_denoise]
 
     def process(self, p, dual_denoise):
-        if dual_denoise is None and not dual_denoise:  # and reverse_denoise > 0
+        if dual_denoise is None or not dual_denoise:  # and reverse_denoise > 0
             return
 
         self.p = p
