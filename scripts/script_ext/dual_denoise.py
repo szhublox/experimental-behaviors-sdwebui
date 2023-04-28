@@ -2,6 +2,7 @@ import torch
 import gradio as gr
 from modules import sd_samplers
 
+orig_create_sampler = sd_samplers.create_sampler
 
 class DualDenoise:
     """
@@ -11,25 +12,22 @@ class DualDenoise:
     # TODO: play with more and compare with stock
     # TODO: look into improving clarity/sharpness of image
     """
-    def __int__(self):
-        self.orig_create_sampler = sd_samplers.create_sampler
-
     def ui(self, is_img2img):
-        return gr.Checkbox(label="Cond/uncond is processed every step and the mean returned")
+        return [gr.Checkbox(label="Cond/uncond is processed every step and the mean returned")]
 
     def process(self, p, dual_denoise):
         if dual_denoise is None and not dual_denoise:   #  and reverse_denoise > 0
             return
 
         def new_create_sampler(name, model):
-            sampler = self.orig_create_sampler(name, model)
+            sampler = orig_create_sampler(name, model)
             sampler.model_wrap_cfg.combine_denoised = new_combine_denoised
             return sampler
 
         sd_samplers.create_sampler = new_create_sampler
 
     def postprocess(self, p, processed, dual_denoise):
-        sd_samplers.create_sampler = self.orig_create_sampler
+        sd_samplers.create_sampler = orig_create_sampler
 
 
 def new_combine_denoised(x_out, conds_list, uncond, cond_scale):
