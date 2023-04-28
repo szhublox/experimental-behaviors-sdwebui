@@ -10,11 +10,11 @@ class DisableMean:
         self.orig_process_tokens = FrozenCLIPEmbedderWithCustomWordsBase.process_tokens
 
     def ui(self, is_img2img):
-        disable_mean = gr.Checkbox(False, label="Disable process_tokens mean restoration")
+        disable_mean = gr.Checkbox(label="Disable process_tokens mean restoration")
         return [disable_mean]
 
     def process(self, p, disable_mean):
-        if not disable_mean:
+        if disable_mean is not None and not disable_mean:
             return
 
         FrozenCLIPEmbedderWithCustomWordsBase.process_tokens = bypass_process_tokens
