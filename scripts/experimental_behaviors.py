@@ -21,16 +21,25 @@ class Script(scripts.Script):
         with gr.Accordion(self.title(), open=False):
             elements = []
             for experiment in self.experiments:
-                elements += experiment.ui(is_img2img)
+                current = experiment.ui(is_img2img)
+                elements += current
+                experiment.num_elements = len(current)
             return elements
 
     def show(self, is_img2img):
         return scripts.AlwaysVisible
 
     def process(self, p, *args):
+        count = 0
         for i, experiment in enumerate(self.experiments):
-            self.experiments[i].process(p, args[i])
+            num_elements = experiment.num_elements
+            experiment.process(p, *args[count:count + num_elements])
+            count += num_elements
 
     def postprocess(self, p, processed, *args):
+        count = 0
         for i, experiment in enumerate(self.experiments):
-            self.experiments[i].postprocess(p, processed, args[i])
+            num_elements = experiment.num_elements
+            experiment.postprocess(
+                p, processed, *args[count:count + num_elements])
+            count += num_elements
