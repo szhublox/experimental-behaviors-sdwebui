@@ -43,59 +43,53 @@ class DenoiseDest:
 
 
 class DisableMean:
-    def process_tokens(remade_batch_tokens, batch_multipliers):
-        tokens = torch.asarray(remade_batch_tokens).to(devices.device)
-        if self.id_end != self.id_pad:
-            for batch_pos in range(len(remade_batch_tokens)):
-                index = remade_batch_tokens[batch_pos].index(self.id_end)
-                tokens[batch_pos, index + 1:tokens.shape[1]] = self.id_pad
-        z = self.encode_with_transformers(tokens)
-        batch_multipliers = torch.asarray(batch_multipliers).to(devices.device)
-        z = z * batch_multipliers.reshape(
-            batch_multipliers.shape + (1,)).expand(z.shape)
-        return z
-
     def __init__(self):
         self.orig_process_tokens \
             = FrozenCLIPEmbedderWithCustomWordsBase.process_tokens
 
     def ui(self, is_img2img):
-        return [gr.Checkbox(
-            False, label="Disable process_tokens mean restoration")]
+        return [gr.Checkbox(label="Disable process_tokens mean restoration")]
 
     def process(self, p, disable_mean):
-        if disable_mean or not disable_mean:
+        if disable_mean is not None or not disable_mean:
             return
 
-        FrozenCLIPEmbedderWithCustomWordsBase.process_tokens \
-            = DisableMean.process_tokens
+        FrozenCLIPEmbedderWithCustomWordsBase.process_tokens = process_tokens
 
     def postprocess(self, p, processed, disable_mean):
         FrozenCLIPEmbedderWithCustomWordsBase.process_tokens \
             = self.orig_process_tokens
 
 
+def process_tokens(self, remade_batch_tokens, batch_multipliers):
+    tokens = torch.asarray(remade_batch_tokens).to(devices.device)
+    if self.id_end != self.id_pad:
+        for batch_pos in range(len(remade_batch_tokens)):
+            index = remade_batch_tokens[batch_pos].index(self.id_end)
+            tokens[batch_pos, index + 1:tokens.shape[1]] = self.id_pad
+    z = self.encode_with_transformers(tokens)
+    batch_multipliers = torch.asarray(batch_multipliers).to(devices.device)
+    z = z * batch_multipliers.reshape(
+        batch_multipliers.shape + (1,)).expand(z.shape)
+    return z
+
+
 class LatentCPU:
-    def cpu_randn(seed, shape):
-        torch.manual_seed(seed)
-        return torch.randn(shape, device='cpu')
-
-    def cpu_randn_without_seed(shape):
-        return torch.randn(shape, device='cpu')
-
     def __init__(self):
         self.orig_randn = devices.randn
         self.orig_randn_without_seed = devices.randn_without_seed
 
     def ui(self, is_img2img):
-        return [gr.Checkbox(False, label="Generate initial latent on CPU")]
+        latent_cpu = gr.Checkbox(label="Generate initial latent on CPU")
+        return [latent_cpu]
 
     def process(self, p, latent_cpu):
         if latent_cpu is None or not latent_cpu:
+            print('not cpu')
             return
 
-        devices.randn = LatentCPU.cpu_randn
-        devices.randn_without_seed = LatentCPU.cpu_randn_without_seed
+        devices.randn = lambda seed, shape: (torch.manual_seed(seed), torch.randn(shape, device='cpu'))[1]
+        devices.randn_without_seed = lambda shape: torch.randn(shape, device='cpu')
 
     def postprocess(self, p, processed, latent_cpu):
         devices.randn = self.orig_randn
