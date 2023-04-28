@@ -8,7 +8,7 @@ from scripts.script_ext.latent_cpu import LatentCPU
 from scripts.script_ext.skip_steps import SkipSteps
 from scripts.script_ext.warp_clip import WarpClip
 
-experiments = [DenoiseDest, DisableMean, LatentCPU, SkipSteps, WarpClip]
+experiments = [DenoiseDest, DisableMean, DualDenoise, LatentCPU, SkipSteps, WarpClip]
 # DualDenoise
 
 class Script(scripts.Script):
