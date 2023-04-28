@@ -180,14 +180,12 @@ class WarpClip:
             self.clip_backup = None
 
 
+experiments = [DenoiseDest, DisableMean, LatentCPU, SkipSteps, WarpClip]
+
+
 class Script(scripts.Script):
     def __init__(self):
-        self.modules = {}
-        self.modules['denoise_dest'] = DenoiseDest()
-        self.modules['disable_mean'] = DisableMean()
-        self.modules['latent_cpu'] = LatentCPU()
-        self.modules['skip_steps'] = SkipSteps()
-        self.modules['warp_clip'] = WarpClip()
+        self.experiments = [init() for init in experiments]
 
     def title(self):
         return "Experimental Behaviors"
@@ -195,25 +193,17 @@ class Script(scripts.Script):
     def ui(self, is_img2img):
         with gr.Accordion(self.title(), open=False):
             elements = []
-            for module in self.modules.values():
-                elements += module.ui(is_img2img)
+            for experiment in self.experiments:
+                elements += experiment.ui(is_img2img)
             return elements
 
     def show(self, is_img2img):
         return scripts.AlwaysVisible
 
-    def process(self, p, reverse_denoise, disable_mean, latent_cpu,
-                skip_steps, pos_ids_mod):
-        self.modules['denoise_dest'].process(p, reverse_denoise)
-        self.modules['disable_mean'].process(p, disable_mean)
-        self.modules['latent_cpu'].process(p, latent_cpu)
-        self.modules['skip_steps'].process(p, skip_steps)
-        self.modules['warp_clip'].process(p, pos_ids_mod)
+    def process(self, p, *args):
+        for i, experiment in enumerate(self.experiments):
+            self.experiments[i].process(p, args[i])
 
-    def postprocess(self, p, processed, reverse_denoise, disable_mean,
-                    latent_cpu, skip_steps, pos_ids_mod):
-        self.modules['denoise_dest'].postprocess(p, processed, reverse_denoise)
-        self.modules['disable_mean'].postprocess(p, processed, disable_mean)
-        self.modules['latent_cpu'].postprocess(p, processed, latent_cpu)
-        self.modules['skip_steps'].postprocess(p, processed, skip_steps)
-        self.modules['warp_clip'].postprocess(p, processed, pos_ids_mod)
+    def postprocess(self, p, *args):
+        for i, experiment in enumerate(self.experiments):
+            self.experiment[i].process(p, args[i])
