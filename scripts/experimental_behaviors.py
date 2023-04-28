@@ -3,7 +3,9 @@ import torch
 
 import modules.scripts as scripts
 from modules import devices, script_callbacks, sd_samplers, shared
-from modules.sd_hijack_clip import FrozenCLIPEmbedderWithCustomWordsBase
+from modules.processing import StableDiffusionProcessing, Processed
+from scripts.script_ext.disable_mean import DisableMean
+from scripts.script_ext.latent_cpu import LatentCPU
 
 
 class DenoiseDest:
@@ -40,60 +42,6 @@ class DenoiseDest:
 
     def postprocess(self, p, processed, reverse_denoise):
         sd_samplers.create_sampler = self.orig_create_sampler
-
-
-class DisableMean:
-    def __init__(self):
-        self.orig_process_tokens \
-            = FrozenCLIPEmbedderWithCustomWordsBase.process_tokens
-
-    def ui(self, is_img2img):
-        return [gr.Checkbox(label="Disable process_tokens mean restoration")]
-
-    def process(self, p, disable_mean):
-        if disable_mean is not None or not disable_mean:
-            return
-
-        FrozenCLIPEmbedderWithCustomWordsBase.process_tokens = process_tokens
-
-    def postprocess(self, p, processed, disable_mean):
-        FrozenCLIPEmbedderWithCustomWordsBase.process_tokens \
-            = self.orig_process_tokens
-
-
-def process_tokens(self, remade_batch_tokens, batch_multipliers):
-    tokens = torch.asarray(remade_batch_tokens).to(devices.device)
-    if self.id_end != self.id_pad:
-        for batch_pos in range(len(remade_batch_tokens)):
-            index = remade_batch_tokens[batch_pos].index(self.id_end)
-            tokens[batch_pos, index + 1:tokens.shape[1]] = self.id_pad
-    z = self.encode_with_transformers(tokens)
-    batch_multipliers = torch.asarray(batch_multipliers).to(devices.device)
-    z = z * batch_multipliers.reshape(
-        batch_multipliers.shape + (1,)).expand(z.shape)
-    return z
-
-
-class LatentCPU:
-    def __init__(self):
-        self.orig_randn = devices.randn
-        self.orig_randn_without_seed = devices.randn_without_seed
-
-    def ui(self, is_img2img):
-        latent_cpu = gr.Checkbox(label="Generate initial latent on CPU")
-        return [latent_cpu]
-
-    def process(self, p, latent_cpu):
-        if latent_cpu is None or not latent_cpu:
-            print('not cpu')
-            return
-
-        devices.randn = lambda seed, shape: (torch.manual_seed(seed), torch.randn(shape, device='cpu'))[1]
-        devices.randn_without_seed = lambda shape: torch.randn(shape, device='cpu')
-
-    def postprocess(self, p, processed, latent_cpu):
-        devices.randn = self.orig_randn
-        devices.randn_without_seed = self.orig_randn_without_seed
 
 
 class SkipSteps:
@@ -196,18 +144,54 @@ class Script(scripts.Script):
     def show(self, is_img2img):
         return scripts.AlwaysVisible
 
-    def process(self, p, reverse_denoise, disable_mean, latent_cpu,
-                skip_steps, pos_ids_mod):
-        self.modules['denoise_dest'].process(p, reverse_denoise)
-        self.modules['disable_mean'].process(p, disable_mean)
-        self.modules['latent_cpu'].process(p, latent_cpu)
-        self.modules['skip_steps'].process(p, skip_steps)
-        self.modules['warp_clip'].process(p, pos_ids_mod)
+    # def process(self, p, reverse_denoise, disable_mean, latent_cpu,
+    #             skip_steps, pos_ids_mod):
+    #     self.modules['denoise_dest'].process(p, reverse_denoise)
+    #     self.modules['disable_mean'].process(p, disable_mean)
+    #     self.modules['latent_cpu'].process(p, latent_cpu)
+    #     self.modules['skip_steps'].process(p, skip_steps)
+    #     self.modules['warp_clip'].process(p, pos_ids_mod)
 
-    def postprocess(self, p, processed, reverse_denoise, disable_mean,
-                    latent_cpu, skip_steps, pos_ids_mod):
-        self.modules['denoise_dest'].postprocess(p, processed, reverse_denoise)
-        self.modules['disable_mean'].postprocess(p, processed, disable_mean)
-        self.modules['latent_cpu'].postprocess(p, processed, latent_cpu)
-        self.modules['skip_steps'].postprocess(p, processed, skip_steps)
-        self.modules['warp_clip'].postprocess(p, processed, pos_ids_mod)
+    # def process(self, p, *args):
+    #     for module_name, arg_value in args:
+    #         self.modules[module_name].process(p, arg_value)
+    #
+    # def postprocess(self, p, processed, *args):
+    #     for module_name, arg_value in args:
+    #         self.modules[module_name].postprocess(p, processed, arg_value)
+
+    def process(self, p, *args):
+        for arg in args:
+            if not isinstance(arg, (list, tuple)):
+                continue
+            module_name, arg_value = arg
+            self.modules[module_name].process(p, arg_value)
+
+    def postprocess(self, p, processed, *args):
+        for arg in args:
+            if not isinstance(arg, (list, tuple)):
+                continue
+            module_name, arg_value = arg
+            self.modules[module_name].postprocess(p, processed, arg_value)
+# script = Script()
+# script.process(StableDiffusionProcessing,
+#                denoise_dest=DenoiseDest,
+#                disable_mean=DisableMean,
+#                latent_cpu=LatentCPU,
+#                skip_steps=SkipSteps,
+#                warp_clip=WarpClip)
+#
+# script.postprocess(StableDiffusionProcessing, Processed,
+#                    denoise_dest=DenoiseDest,
+#                    disable_mean=DisableMean,
+#                    latent_cpu=LatentCPU,
+#                    skip_steps=SkipSteps,
+#                    warp_clip=WarpClip)
+
+# def postprocess(self, p, processed, reverse_denoise, disable_mean,
+#                 latent_cpu, skip_steps, pos_ids_mod):
+#     self.modules['denoise_dest'].postprocess(p, processed, reverse_denoise)
+#     self.modules['disable_mean'].postprocess(p, processed, disable_mean)
+#     self.modules['latent_cpu'].postprocess(p, processed, latent_cpu)
+#     self.modules['skip_steps'].postprocess(p, processed, skip_steps)
+#     self.modules['warp_clip'].postprocess(p, processed, pos_ids_mod)
