@@ -2,7 +2,7 @@ import gradio as gr
 import torch
 
 import modules.scripts as scripts
-from modules import devices, sd_samplers, shared
+from modules import devices, script_callbacks, sd_samplers, shared
 from modules.sd_hijack_clip import FrozenCLIPEmbedderWithCustomWordsBase
 
 
@@ -103,6 +103,17 @@ class LatentCPU:
 
 
 class SkipSteps:
+    def clean_stop(self, params: script_callbacks.CFGDenoiserParams):
+        try:
+            if params.sampling_step == self.stop_at:
+                def new_combine_denoised(x_out, conds_list, uncond,
+                                         cond_scale):
+                    return x_out[0:uncond.shape[0]]
+                self.sampler.model_wrap_cfg.combine_denoised \
+                    = new_combine_denoised
+        except:
+            pass
+
     def __init__(self):
         self.orig_create_sampler = sd_samplers.create_sampler
 
@@ -114,18 +125,23 @@ class SkipSteps:
         if skip_steps is None or skip_steps < 1:
             return
 
+        script_callbacks.on_cfg_denoised(self.clean_stop)
+
+        # off-by-one
+        self.stop_at = p.steps - skip_steps - 1
         self.current_create_sampler = sd_samplers.create_sampler
 
         def new_create_sampler(name, model):
             sampler = self.current_create_sampler(name, model)
-            # off-by-one
-            sampler.stop_at = p.steps - skip_steps - 1
+            sampler.stop_at = self.stop_at
+            self.sampler = sampler
             return sampler
 
         sd_samplers.create_sampler = new_create_sampler
 
     def postprocess(self, p, processed, skip_steps):
         sd_samplers.create_sampler = self.orig_create_sampler
+        script_callbacks.remove_callbacks_for_function(self.clean_stop)
 
 
 class WarpClip:
