@@ -44,12 +44,6 @@ class DualDenoise:
 
         self.p = p
         script_callbacks.on_cfg_denoised(self.replace_combine)
-        # def new_create_sampler(name, model):
-        #     sampler = orig_create_sampler(name, model)
-        #     sampler.model_wrap_cfg.combine_denoised = new_combine_denoised
-        #     return sampler
-
-        # sd_samplers.create_sampler = new_create_sampler
 
     def postprocess(self, p, processed, dual_denoise):
         script_callbacks.remove_callbacks_for_function(self.replace_combine)
