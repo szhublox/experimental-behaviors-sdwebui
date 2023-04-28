@@ -3,10 +3,9 @@ import torch
 
 import modules.scripts as scripts
 from modules import devices, script_callbacks, sd_samplers, shared
-from modules.processing import StableDiffusionProcessing, Processed
 from scripts.script_ext.disable_mean import DisableMean
 from scripts.script_ext.latent_cpu import LatentCPU
-
+from scripts.script_ext.dual_denoise import DualDenoise
 
 class DenoiseDest:
     def new_combine_denoised(x_out, conds_list, uncond, cond_scale):
@@ -122,7 +121,7 @@ class WarpClip:
             self.clip_backup = None
 
 
-experiments = [DenoiseDest, DisableMean, LatentCPU, SkipSteps, WarpClip]
+experiments = [DenoiseDest, DisableMean, DualDenoise, LatentCPU, SkipSteps, WarpClip]
 
 
 class Script(scripts.Script):
