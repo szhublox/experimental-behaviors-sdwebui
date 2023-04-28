@@ -42,7 +42,7 @@ class DenoiseDest:
 
 
 class DisableMean:
-    def process_tokens(remade_batch_tokens, batch_multipliers):
+    def process_tokens(self, remade_batch_tokens, batch_multipliers):
         tokens = torch.asarray(remade_batch_tokens).to(devices.device)
         if self.id_end != self.id_pad:
             for batch_pos in range(len(remade_batch_tokens)):
@@ -63,7 +63,7 @@ class DisableMean:
             False, label="Disable process_tokens mean restoration")]
 
     def process(self, p, disable_mean):
-        if disable_mean or not disable_mean:
+        if disable_mean is None or not disable_mean:
             return
 
         FrozenCLIPEmbedderWithCustomWordsBase.process_tokens \
