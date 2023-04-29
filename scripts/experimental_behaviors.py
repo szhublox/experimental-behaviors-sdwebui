@@ -3,12 +3,11 @@ import gradio as gr
 import modules.scripts as scripts
 from scripts.script_ext.denoise_dest import DenoiseDest
 from scripts.script_ext.disable_mean import DisableMean
-from scripts.script_ext.dual_denoise import DualDenoise
 from scripts.script_ext.latent_cpu import LatentCPU
 from scripts.script_ext.skip_steps import SkipSteps
 from scripts.script_ext.warp_clip import WarpClip
 
-experiments = [DenoiseDest, DualDenoise, DisableMean, LatentCPU, SkipSteps, WarpClip]
+experiments = [DenoiseDest, DisableMean, LatentCPU, SkipSteps, WarpClip]
 
 class Script(scripts.Script):
     def __init__(self):
