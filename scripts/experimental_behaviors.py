@@ -1,6 +1,6 @@
 import gradio as gr
 
-import modules.scripts as scripts
+from modules import scripts
 from scripts.script_ext.denoise_dest import DenoiseDest
 from scripts.script_ext.disable_mean import DisableMean
 from scripts.script_ext.latent_cpu import LatentCPU
