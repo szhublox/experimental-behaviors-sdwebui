@@ -49,7 +49,7 @@ class DenoiseDest:
     def ui(self, is_img2img):
         return [gr.Slider(minimum=0.0, maximum=1.0, step=0.01, value=0,
                           label="Alter denoise for final progress"),
-                gr.Radio(["Reverse", "Dual"], label="Denoising method",
+                gr.Radio(["Reverse", "Dual"], value="Reverse", label="Denoising method",
                          info="For dual, cond/uncond is processed every step and the mean returned")]
 
     def process(self, p, alter_denoise, denoise_method):
