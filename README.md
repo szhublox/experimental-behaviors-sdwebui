@@ -42,7 +42,7 @@ Generating on GPU gives different results on different cards, but generating on 
 
 ### Swap prompt/negative prompt and negate CFG
 
-This does not change the image output very much. The drawback is that the negative prompt has a hard 75 token limit.
+This does not change the image output very much. An interesting side-effect is the ability to use AND in the negative prompt.
 
 ### Setting sampler stop\_at
 
