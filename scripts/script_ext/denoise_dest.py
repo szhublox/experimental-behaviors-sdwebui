@@ -24,15 +24,11 @@ class DenoiseDest:
     def dual(self, x_out, conds_list, uncond, cond_scale):
         """
         Denoises both cond and uncond Tensors every step and returns the mean of the Tensor
-        Additionally, divides the denoised_uncond_(tmp) by 2 and restores it after processing
-        which makes colors pop more
-        # TODO: play with more and compare with stock
-        # TODO: look into improving clarity/sharpness of image
         """
         denoised_uncond = x_out[-uncond.shape[0]:]
         denoised = torch.clone(x_out[0:uncond.shape[0]])
         # TODO: makes colors more vivid - experiment more
-        denoised_uncond_tmp = torch.div(torch.clone(denoised_uncond), 2)
+        denoised_uncond_tmp = denoised_uncond  # torch.div(torch.clone(denoised_uncond), 2)
 
         for i, conds in enumerate(conds_list):
             for cond_index, weight in conds:
@@ -40,8 +36,8 @@ class DenoiseDest:
                 denoised_uncond_tmp[i] += (x_out[cond_index] + denoised[i]) / ((weight * cond_scale) * cond_scale)
                 # do not use weight or divide by cond_scale
 
-        restore_uncond = torch.mul(denoised_uncond_tmp, 2)
-        add_tensors = denoised.add(restore_uncond)
+        # restore_uncond = torch.mul(denoised_uncond_tmp, 2)
+        add_tensors = denoised.add(denoised_uncond_tmp)
         tensor_mean_denoised = torch.div(add_tensors, 2)
 
         return tensor_mean_denoised
