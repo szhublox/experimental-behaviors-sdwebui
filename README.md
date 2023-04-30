@@ -3,14 +3,19 @@
 - Change kdiffusion denoise method
 - Disable mean restore procedure at the end of process\_tokens()
 - Generate initial latent on CPU instead of GPU
+- Swap prompt/negative prompt and negate CFG
 - Set sampler stop\_at
 - Modify CLIP position\_ids inline
 
 ## Notes
 
-**This extension is not fully compatible with the dynamic thresholding extension because they modify some of the same functions.**
-
 The features that are not fully compatible with CompVis is a bug with this extension, not with CompVis samplers.
+
+## Known extension conflicts
+
+[Dynamic Thresholding](https://github.com/mcmonkeyprojects/sd-dynamic-thresholding)
+
+[Tiled Diffusion](https://github.com/pkuliyi2015/multidiffusion-upscaler-for-automatic1111)
 
 ### Changing kdiffusion denoise
 
@@ -34,6 +39,10 @@ z = z * (original_mean / new_mean)
 ### Generating initial latent on CPU
 
 Generating on GPU gives different results on different cards, but generating on CPU does not. This is also available as a setting in new versions of webui.
+
+### Swap prompt/negative prompt and negate CFG
+
+This does not change the image output very much. An interesting side-effect is the ability to use AND in the negative prompt.
 
 ### Setting sampler stop\_at
 
