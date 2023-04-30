@@ -3,6 +3,7 @@
 - Change kdiffusion denoise method
 - Disable mean restore procedure at the end of process\_tokens()
 - Generate initial latent on CPU instead of GPU
+- Swap prompt/negative prompt and negate CFG
 - Set sampler stop\_at
 - Modify CLIP position\_ids inline
 
@@ -38,6 +39,10 @@ z = z * (original_mean / new_mean)
 ### Generating initial latent on CPU
 
 Generating on GPU gives different results on different cards, but generating on CPU does not. This is also available as a setting in new versions of webui.
+
+### Swap prompt/negative prompt and negate CFG
+
+This does not change the image output very much. The drawback is that the negative prompt has a hard 75 token limit.
 
 ### Setting sampler stop\_at
 
