@@ -5,6 +5,11 @@ from modules import script_callbacks
 
 
 class DenoiseDest:
+    def __init__(self):
+        self.p = None
+        self.alter_fraction = None
+        self.func = None
+
     def reverse(self, x_out, conds_list, uncond, cond_scale):
         denoised_uncond = x_out[-uncond.shape[0]:]
         denoised = torch.clone(x_out[0:uncond.shape[0]])
