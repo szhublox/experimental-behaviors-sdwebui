@@ -42,7 +42,7 @@ Generating on GPU gives different results on different cards, but generating on 
 
 ### Swap prompt/negative prompt and negate CFG
 
-This does not change the image output very much. An interesting side-effect is the ability to use AND in the negative prompt. Currently this does not appear to correctly apply LoRA or work with the styles box. There are probably other bugs too.
+This does not change the image output very much, but sometimes it is better. An interesting side-effect is the ability to use AND in the negative prompt, regardless of whether or not that's a good idea. This alters the final infotext to appear normal so that the PNG Info tab will mostly give back what you originally typed.
 
 ### Setting sampler stop\_at
 
