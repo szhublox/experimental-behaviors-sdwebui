@@ -35,8 +35,11 @@ class ReverseCFG:
 
         index = position_in_batch + iteration * p.batch_size
         prompt_backup = p.all_negative_prompts[index]
-        replace_str = self.all_nets if f"{self.all_nets}, " not in p.all_negative_prompts[index] else f"{self.all_nets}, "
-        p.all_negative_prompts[index] = p.all_negative_prompts[index].replace(replace_str, "")
+        if self.all_nets:
+            replace_str = self.all_nets if f"{self.all_nets}, " not in p.all_negative_prompts[index] else f"{self.all_nets}, "
+            p.all_negative_prompts[index] = p.all_negative_prompts[index].replace(replace_str, "")
+        else:
+            replace_str = ""
 
         info = self.orig_create_infotext(p, tmp_neg, all_seeds, all_subseeds, comments, iteration, position_in_batch)
         if p.cfg_scale <= 0:
