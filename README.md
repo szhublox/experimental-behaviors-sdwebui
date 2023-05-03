@@ -9,13 +9,9 @@
 
 ## Notes
 
-The features that are not fully compatible with CompVis is a bug with this extension, not with CompVis samplers.
-
 ## Known extension conflicts
 
 [Dynamic Thresholding](https://github.com/mcmonkeyprojects/sd-dynamic-thresholding)
-
-[Tiled Diffusion](https://github.com/pkuliyi2015/multidiffusion-upscaler-for-automatic1111)
 
 ### Changing kdiffusion denoise
 
