@@ -39,7 +39,10 @@ class ReverseCFG:
         p.all_negative_prompts[index] = p.all_negative_prompts[index].replace(replace_str, "")
 
         info = self.orig_create_infotext(p, tmp_neg, all_seeds, all_subseeds, comments, iteration, position_in_batch)
-        info = info.replace("CFG scale: -", "CFG scale: ")
+        if p.cfg_scale <= 0:
+            info = info.replace("CFG scale: -", "CFG scale: ")
+        else:
+            info = info.replace("CFG scale: ", "CFG scale: -")
 
         p.all_negative_prompts[index] = prompt_backup
         if ", " in replace_str:
