@@ -9,10 +9,6 @@
 
 ## Notes
 
-## Known extension conflicts
-
-[Dynamic Thresholding](https://github.com/mcmonkeyprojects/sd-dynamic-thresholding)
-
 ### Changing kdiffusion denoise
 
 There are two options, "Reverse" and "Dual" with an accompanying slider to determine how far into generation to swap to the alternate method. Set to 0 does nothing, and set to 0.2 will set the change for the last 20% of generation. The CompVis samplers are DDIM, PLMS, and UniPC, and kdiffusion is everything else.
