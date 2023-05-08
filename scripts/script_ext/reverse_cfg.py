@@ -61,7 +61,7 @@ class ReverseCFG:
     def ui(self, is_img2img):
         return [gr.Checkbox(label="Swap prompts and negate CFG")]
 
-    def process(self, p, reverse_cfg):
+    def process(self, p, reverse_cfg, **kwargs):
         if reverse_cfg is None or not reverse_cfg:
             return
 
@@ -81,7 +81,7 @@ class ReverseCFG:
         else:
             p.all_negative_prompts = p.batch_size * p.n_iter * [shared.prompt_styles.apply_styles_to_prompt(p.prompt, p.styles)]
 
-    def postprocess(self, p, processed, reverse_cfg):
+    def postprocess(self, p, reverse_cfg, **kwargs):
         if reverse_cfg is None or not reverse_cfg:
             return
 

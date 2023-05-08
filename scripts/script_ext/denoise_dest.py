@@ -53,7 +53,7 @@ class DenoiseDest:
                 gr.Radio(["Reverse", "Dual"], value="Reverse", label="Denoising method",
                          info="For dual, cond/uncond is processed every step and the mean returned")]
 
-    def process(self, p, alter_denoise, denoise_method):
+    def process(self, p, alter_denoise, denoise_method, **kwargs):
         if (alter_denoise is None or alter_denoise == 0.0) \
                 or (denoise_method is None or denoise_method == ""):
             return
@@ -64,5 +64,5 @@ class DenoiseDest:
         self.func = getattr(self, denoise_method.lower())
         script_callbacks.on_cfg_denoised(self.replace_combine)
 
-    def postprocess(self, p, processed, alter_denoise, dual_denoise):
+    def postprocess(self, p, *args, **kwargs):
         script_callbacks.remove_callbacks_for_function(self.replace_combine)

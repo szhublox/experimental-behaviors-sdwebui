@@ -31,18 +31,23 @@ class Script(scripts.Script):
     def show(self, is_img2img):
         return scripts.AlwaysVisible
 
-    def process(self, p, *args):
+    def run_hook(self, hook, p, *args, **kwargs):
         count = 0
         for i, experiment in enumerate(self.experiments):
             num_elements = experiment.num_elements
-            experiment.process(p, *args[count:count + num_elements])
+            func = getattr(experiment, hook, None)
+            if func:
+                func(p, *args[count:count + num_elements], **kwargs)
             count += num_elements
 
-    def postprocess(self, p, processed, *args):
-        count = 0
-        for i, experiment in enumerate(self.experiments):
-            num_elements = experiment.num_elements
-            if hasattr(experiment, "postprocess"):
-                experiment.postprocess(
-                    p, processed, *args[count:count + num_elements])
-            count += num_elements
+    def process(self, p, *args, **kwargs):
+        self.run_hook("process", p, *args, **kwargs)
+
+    def process_batch(self, p, *args, **kwargs):
+        self.run_hook("process_batch", p, *args, **kwargs)
+
+    def postprocess_batch(self, p, *args, **kwargs):
+        self.run_hook("postprocess_batch", p, *args, **kwargs)
+
+    def postprocess(self, p, *args, **kwargs):
+        self.run_hook("postprocess", p, *args, **kwargs)

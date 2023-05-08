@@ -19,7 +19,7 @@ class DisableMean:
 
         FrozenCLIPEmbedderWithCustomWordsBase.process_tokens = bypass_process_tokens
 
-    def postprocess(self, p, processed, disable_mean):
+    def postprocess(self, p, *args, **kwargs):
         FrozenCLIPEmbedderWithCustomWordsBase.process_tokens = self.orig_process_tokens
 
 

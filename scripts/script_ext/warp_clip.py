@@ -26,7 +26,7 @@ class WarpClip:
                            label="Modify CLIP position_ids",
                            value="Unmodified")]
 
-    def process(self, p, pos_ids_mod):
+    def process(self, p, pos_ids_mod, **kwargs):
         if pos_ids_mod is None or pos_ids_mod == next(iter(WarpClip.POS_IDS)) \
                 or pos_ids_mod == 0:
             return
@@ -37,7 +37,7 @@ class WarpClip:
         shared.sd_model.cond_stage_model.wrapped.transformer.text_model.embeddings.position_ids \
             = torch.as_tensor(WarpClip.POS_IDS[pos_ids_mod], device=device)
 
-    def postprocess(self, p, processed, pos_ids_mod):
+    def postprocess(self, p, pos_ids_mod, **kwargs):
         if self.clip_backup is not None:
             shared.sd_model.cond_stage_model.wrapped.transformer.text_model.embeddings.position_ids \
                 = self.clip_backup

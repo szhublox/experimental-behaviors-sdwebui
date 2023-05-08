@@ -20,6 +20,6 @@ class LatentCPU:
         devices.randn = lambda seed, shape: (torch.manual_seed(seed), torch.randn(shape, device='cpu'))[1]
         devices.randn_without_seed = lambda shape: torch.randn(shape, device='cpu')
 
-    def postprocess(self, p, processed, latent_cpu):
+    def postprocess(self, p, *args, **kwargs):
         devices.randn = self.orig_randn
         devices.randn_without_seed = self.orig_randn_without_seed
