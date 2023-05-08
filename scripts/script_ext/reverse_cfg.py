@@ -28,36 +28,6 @@ class ReverseCFG:
 
         return dst
 
-    def new_create_infotext(self, p, all_prompts, all_seeds, all_subseeds, comments=None, iteration=0, position_in_batch=0):
-        tmp_pos = p.all_prompts
-        tmp_neg = p.all_negative_prompts
-        p.all_negative_prompts = all_prompts
-
-        index = position_in_batch + iteration * p.batch_size
-        prompt_backup = p.all_negative_prompts[index]
-        if self.all_nets:
-            replace_str = self.all_nets if f"{self.all_nets}, " not in p.all_negative_prompts[index] else f"{self.all_nets}, "
-            p.all_negative_prompts[index] = p.all_negative_prompts[index].replace(replace_str, "")
-        else:
-            replace_str = ""
-
-        info = self.orig_create_infotext(p, tmp_neg, all_seeds, all_subseeds, comments, iteration, position_in_batch)
-        if p.cfg_scale <= 0:
-            info = info.replace("CFG scale: -", "CFG scale: ")
-        else:
-            info = info.replace("CFG scale: ", "CFG scale: -")
-
-        p.all_negative_prompts[index] = prompt_backup
-        if ", " in replace_str:
-            p.all_negative_prompts[index] = p.all_negative_prompts[index].replace(", ", "", 1)
-
-        p.all_prompts = tmp_pos
-        p.all_negative_prompts = tmp_neg
-        return info
-
-    def __init__(self):
-        self.orig_create_infotext = processing.create_infotext
-
     def ui(self, is_img2img):
         return [gr.Checkbox(label="Swap prompts and negate CFG")]
 
@@ -65,9 +35,8 @@ class ReverseCFG:
         if reverse_cfg is None or not reverse_cfg:
             return
 
-        processing.create_infotext = self.new_create_infotext
-
-        p.cfg_scale = -p.cfg_scale
+        self.orig_all_prompts = p.all_prompts
+        self.orig_all_negative_prompts = p.all_negative_prompts
 
         p.negative_prompt = self.swap_extra_networks(p.prompt, p.negative_prompt)
 
@@ -81,8 +50,21 @@ class ReverseCFG:
         else:
             p.all_negative_prompts = p.batch_size * p.n_iter * [shared.prompt_styles.apply_styles_to_prompt(p.prompt, p.styles)]
 
-    def postprocess(self, p, reverse_cfg, **kwargs):
+        self.backup_all_prompts = p.all_prompts
+        self.backup_all_negative_prompts = p.all_negative_prompts
+
+    def before_process_batch(self, p, reverse_cfg, **kwargs):
         if reverse_cfg is None or not reverse_cfg:
             return
 
-        processing.create_infotext = self.orig_create_infotext
+        p.cfg_scale = -p.cfg_scale
+        p.all_prompts = self.backup_all_prompts
+        p.all_negative_prompts = self.backup_all_negative_prompts
+
+    def postprocess_batch(self, p, reverse_cfg, **kwargs):
+        if reverse_cfg is None or not reverse_cfg:
+            return
+
+        p.cfg_scale = -p.cfg_scale
+        p.all_prompts = self.orig_all_prompts
+        p.all_negative_prompts = self.orig_all_negative_prompts

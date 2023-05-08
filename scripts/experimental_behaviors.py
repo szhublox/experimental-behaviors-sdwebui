@@ -43,6 +43,9 @@ class Script(scripts.Script):
     def process(self, p, *args, **kwargs):
         self.run_hook("process", p, *args, **kwargs)
 
+    def before_process_batch(self, p, *args, **kwargs):
+        self.run_hook("before_process_batch", p, *args, **kwargs)
+
     def process_batch(self, p, *args, **kwargs):
         self.run_hook("process_batch", p, *args, **kwargs)
 
