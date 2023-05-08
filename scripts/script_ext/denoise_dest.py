@@ -62,7 +62,14 @@ class DenoiseDest:
 
         self.p = p
         self.func = getattr(self, denoise_method.lower())
+
+    def process_batch(self, p, alter_denoise, denoise_method, **kwargs):
+        if (alter_denoise is None or alter_denoise == 0.0) \
+                or (denoise_method is None or denoise_method == ""):
+            return
+
         script_callbacks.on_cfg_denoised(self.replace_combine)
 
-    def postprocess(self, p, *args, **kwargs):
+    def postprocess_batch(self, p, *args, **kwargs):
+        self.__init__()
         script_callbacks.remove_callbacks_for_function(self.replace_combine)
