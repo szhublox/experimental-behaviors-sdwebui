@@ -2,10 +2,15 @@ import re
 
 import gradio as gr
 
-from modules import extra_networks, processing, shared
+from modules import extra_networks, images, script_callbacks, shared
 
 
 class ReverseCFG:
+    def filename_callback(self, params):
+        params.filename = params.filename.replace(
+            images.sanitize_filename_part(self.orig_all_negative_prompts[params.p.batch_index]),
+            images.sanitize_filename_part(self.orig_all_prompts[params.p.batch_index]))
+
     def swap_extra_networks(self, src, dst):
         def get_nets(src):
             nets = ""
@@ -52,6 +57,7 @@ class ReverseCFG:
 
         self.backup_all_prompts = p.all_prompts
         self.backup_all_negative_prompts = p.all_negative_prompts
+        script_callbacks.on_before_image_saved(self.filename_callback)
 
     def before_process_batch(self, p, reverse_cfg, **kwargs):
         if reverse_cfg is None or not reverse_cfg:
@@ -68,3 +74,6 @@ class ReverseCFG:
         p.cfg_scale = -p.cfg_scale
         p.all_prompts = self.orig_all_prompts
         p.all_negative_prompts = self.orig_all_negative_prompts
+
+    def postprocess(self, p, *args, **kwargs):
+        script_callbacks.remove_callbacks_for_function(self.filename_callback)
