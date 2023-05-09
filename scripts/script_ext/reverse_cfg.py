@@ -7,9 +7,12 @@ from modules import extra_networks, images, script_callbacks, shared
 
 class ReverseCFG:
     def filename_callback(self, params):
-        params.filename = params.filename.replace(
-            images.sanitize_filename_part(self.orig_all_negative_prompts[params.p.batch_index]),
-            images.sanitize_filename_part(self.orig_all_prompts[params.p.batch_index]))
+        for replace_spaces in (True, False):
+            params.filename = params.filename.replace(
+                images.sanitize_filename_part(self.orig_all_negative_prompts[params.p.batch_index],
+                                              replace_spaces),
+                images.sanitize_filename_part(self.orig_all_prompts[params.p.batch_index],
+                                              replace_spaces))
 
     def swap_extra_networks(self, src, dst):
         def get_nets(src):
