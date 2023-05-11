@@ -16,6 +16,8 @@ class SkipSteps:
         self.orig_create_sampler = sd_samplers.create_sampler
 
     def ui(self, is_img2img):
+        if is_img2img:
+            return []
         return [gr.Slider(minimum=0, maximum=20, step=1, value=0,
                           label="Final sampling steps to skip")]
 

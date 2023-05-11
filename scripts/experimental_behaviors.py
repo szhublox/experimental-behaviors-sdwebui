@@ -36,7 +36,7 @@ class Script(scripts.Script):
         for i, experiment in enumerate(self.experiments):
             num_elements = experiment.num_elements
             func = getattr(experiment, hook, None)
-            if func:
+            if func and num_elements > 0:
                 func(p, *args[count:count + num_elements], **kwargs)
             count += num_elements
 
