@@ -7,6 +7,9 @@ from modules import extra_networks, images, script_callbacks, shared
 
 class ReverseCFG:
     def filename_callback(self, params):
+        if not params.p:
+            return
+
         if self.orig_all_negative_prompts[params.p.batch_index]:
             for replace_spaces in (True, False):
                 params.filename = params.filename.replace(
