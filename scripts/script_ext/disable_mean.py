@@ -14,7 +14,7 @@ class DisableMean:
         return [disable_mean]
 
     def process(self, p, disable_mean):
-        if disable_mean is not None and not disable_mean:
+        if disable_mean is None or not disable_mean:
             return
 
         FrozenCLIPEmbedderWithCustomWordsBase.process_tokens = bypass_process_tokens
