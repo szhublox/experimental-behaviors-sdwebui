@@ -87,6 +87,14 @@ class ReverseCFG:
         p.seeds = p.all_seeds[n * p.batch_size:(n + 1) * p.batch_size]
         p.subseeds = p.all_subseeds[n * p.batch_size:(n + 1) * p.batch_size]
 
+        if p.enable_hr:
+            p.all_hr_prompts = p.all_prompts
+            p.all_hr_negative_prompts = p.all_negative_prompts
+            p.hr_prompts = p.all_hr_prompts[n * p.batch_size:(n + 1) * p.batch_size]
+            p.hr_negative_prompts = p.all_hr_negative_prompts[n * p.batch_size:(n + 1) * p.batch_size]
+            p.hr_prompts, p.hr_extra_network_data = \
+                extra_networks.parse_prompts(p.hr_prompts)
+
     def postprocess_batch(self, p, reverse_cfg, **kwargs):
         if reverse_cfg is None or not reverse_cfg:
             return
