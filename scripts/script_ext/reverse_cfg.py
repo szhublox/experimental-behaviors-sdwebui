@@ -81,6 +81,12 @@ class ReverseCFG:
         p.all_prompts = self.backup_all_prompts
         p.all_negative_prompts = self.backup_all_negative_prompts
 
+        n = p.iteration
+        p.prompts = p.all_prompts[n * p.batch_size:(n + 1) * p.batch_size]
+        p.negative_prompts = p.all_negative_prompts[n * p.batch_size:(n + 1) * p.batch_size]
+        p.seeds = p.all_seeds[n * p.batch_size:(n + 1) * p.batch_size]
+        p.subseeds = p.all_subseeds[n * p.batch_size:(n + 1) * p.batch_size]
+
     def postprocess_batch(self, p, reverse_cfg, **kwargs):
         if reverse_cfg is None or not reverse_cfg:
             return
