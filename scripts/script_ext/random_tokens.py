@@ -11,7 +11,7 @@ open_clip_tokenizer = open_clip.tokenizer._tokenizer
 
 class RandomTokens:
     def ui(self, is_img2img):
-        return [gr.Slider(minimum=0, maximum=30, step=1, value=0,
+        return [gr.Slider(minimum=0, maximum=75, step=1, value=0,
                           label="Append random tokens to prompt")]
 
     def process(self, p, random_tokens):
