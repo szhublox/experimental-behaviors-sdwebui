@@ -87,7 +87,7 @@ class ReverseCFG:
         p.seeds = p.all_seeds[n * p.batch_size:(n + 1) * p.batch_size]
         p.subseeds = p.all_subseeds[n * p.batch_size:(n + 1) * p.batch_size]
 
-        if p.enable_hr:
+        if hasattr(p, "enable_hr") and p.enable_hr:
             p.all_hr_prompts = p.all_prompts
             p.all_hr_negative_prompts = p.all_negative_prompts
             p.hr_prompts = p.all_hr_prompts[n * p.batch_size:(n + 1) * p.batch_size]
