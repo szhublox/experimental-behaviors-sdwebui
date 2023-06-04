@@ -47,10 +47,22 @@ class ReverseCFG:
 
         return dst
 
-    def ui(self, is_img2img):
-        return [gr.Checkbox(label="Swap prompts and negate CFG")]
+    def remove_extra_networks(self,src):
+        s = src
+        for net in re.finditer(extra_networks.re_extra_net, src):
+            s = s.replace(net.group(0), '')
+            
+        s = re.sub(r' +', ' ', s)
 
-    def process(self, p, reverse_cfg, **kwargs):
+        return s
+
+    def ui(self, is_img2img):
+        with gr.Row(variant='compact') as tab_enable:
+            enabled = gr.Checkbox(label="Swap prompts and negate CFG")
+            dirty = gr.Checkbox(label="Keep extra networks as tokens")
+        return [enabled, dirty]
+
+    def process(self, p, reverse_cfg, dirty, **kwargs):
         if reverse_cfg is None or not reverse_cfg:
             return
 
@@ -58,6 +70,8 @@ class ReverseCFG:
         self.orig_all_negative_prompts = p.all_negative_prompts
 
         p.negative_prompt = self.swap_extra_networks(p.prompt, p.negative_prompt)
+        if not dirty:
+            p.prompt = self.remove_extra_networks(p.prompt)
 
         if type(p.negative_prompt) == list:
             p.all_prompts = [shared.prompt_styles.apply_negative_styles_to_prompt(x, p.styles) for x in p.negative_prompt]
@@ -73,7 +87,7 @@ class ReverseCFG:
         self.backup_all_negative_prompts = p.all_negative_prompts
         script_callbacks.on_before_image_saved(self.filename_callback)
 
-    def before_process_batch(self, p, reverse_cfg, **kwargs):
+    def before_process_batch(self, p, reverse_cfg, dirty, **kwargs):
         if reverse_cfg is None or not reverse_cfg:
             return
 
@@ -95,7 +109,7 @@ class ReverseCFG:
             p.hr_prompts, p.hr_extra_network_data = \
                 extra_networks.parse_prompts(p.hr_prompts)
 
-    def postprocess_batch(self, p, reverse_cfg, **kwargs):
+    def postprocess_batch(self, p, reverse_cfg, dirt, **kwargs):
         if reverse_cfg is None or not reverse_cfg:
             return
 
