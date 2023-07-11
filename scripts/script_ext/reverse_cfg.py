@@ -25,7 +25,7 @@ class ReverseCFG:
                 f"{images.sanitize_filename_part(self.orig_all_prompts[params.p.batch_index])}" \
                 f".{extension}"
 
-    def swap_extra_networks(self, src, dst):
+    def swap_extra_networks(self, src, dst, z_weight):
         def get_nets(src):
             nets = ""
             for net in re.findall(extra_networks.re_extra_net, src):
@@ -38,6 +38,9 @@ class ReverseCFG:
                 self.all_nets += get_nets(x)
         else:
             self.all_nets = get_nets(src)
+
+        if (z_weight > 0.0):
+            dst = f"[[{dst}:({self.remove_extra_networks(src)}:{z_weight}):0]:{dst}:1]"
 
         if type(dst) == list:
             for x in dst:
@@ -60,16 +63,17 @@ class ReverseCFG:
         with gr.Row(variant='compact') as tab_enable:
             enabled = gr.Checkbox(label="Swap prompts and negate CFG")
             dirty = gr.Checkbox(label="Keep extra networks as tokens")
-        return [enabled, dirty]
+        zero_weight = gr.Slider(minimum=0.0, maximum=5.0, step=0.5, value=0, label="Unreverse Negative prompt at step 0 with weight:")
+        return [enabled, dirty, zero_weight]
 
-    def process(self, p, reverse_cfg, dirty, **kwargs):
+    def process(self, p, reverse_cfg, dirty, zero_weight, **kwargs):
         if reverse_cfg is None or not reverse_cfg:
             return
 
         self.orig_all_prompts = p.all_prompts
         self.orig_all_negative_prompts = p.all_negative_prompts
 
-        p.negative_prompt = self.swap_extra_networks(p.prompt, p.negative_prompt)
+        p.negative_prompt = self.swap_extra_networks(p.prompt, p.negative_prompt, zero_weight)
         if not dirty:
             p.prompt = self.remove_extra_networks(p.prompt)
 
@@ -87,7 +91,7 @@ class ReverseCFG:
         self.backup_all_negative_prompts = p.all_negative_prompts
         script_callbacks.on_before_image_saved(self.filename_callback)
 
-    def before_process_batch(self, p, reverse_cfg, dirty, **kwargs):
+    def before_process_batch(self, p, reverse_cfg, _dirty, _zero_weight, **kwargs):
         if reverse_cfg is None or not reverse_cfg:
             return
 
@@ -109,7 +113,7 @@ class ReverseCFG:
             p.hr_prompts, p.hr_extra_network_data = \
                 extra_networks.parse_prompts(p.hr_prompts)
 
-    def postprocess_batch(self, p, reverse_cfg, dirt, **kwargs):
+    def postprocess_batch(self, p, reverse_cfg, dirt, _zero_weight, **kwargs):
         if reverse_cfg is None or not reverse_cfg:
             return
 
