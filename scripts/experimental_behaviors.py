@@ -3,14 +3,15 @@ import gradio as gr
 from modules import scripts
 from scripts.script_ext.denoise_dest import DenoiseDest
 from scripts.script_ext.disable_mean import DisableMean
+from scripts.script_ext.image_flip import ImageFlip
 from scripts.script_ext.latent_cpu import LatentCPU
 from scripts.script_ext.random_tokens import RandomTokens
 from scripts.script_ext.reverse_cfg import ReverseCFG
 from scripts.script_ext.skip_steps import SkipSteps
 from scripts.script_ext.warp_clip import WarpClip
 
-experiments = [DenoiseDest, DisableMean, LatentCPU, RandomTokens, ReverseCFG,
-               SkipSteps, WarpClip]
+experiments = [DenoiseDest, DisableMean, ImageFlip, LatentCPU, RandomTokens,
+               ReverseCFG, SkipSteps, WarpClip]
 
 class Script(scripts.Script):
     def __init__(self):
@@ -32,13 +33,16 @@ class Script(scripts.Script):
     def show(self, is_img2img):
         return scripts.AlwaysVisible
 
-    def run_hook(self, hook, p, *args, **kwargs):
+    def run_hook(self, hook, p, *args, extra=None, **kwargs):
         count = 0
         for i, experiment in enumerate(self.experiments):
             num_elements = experiment.num_elements
             func = getattr(experiment, hook, None)
             if func and num_elements > 0:
-                func(p, *args[count:count + num_elements], **kwargs)
+                if extra:
+                    func(p, extra, *args[count:count + num_elements], **kwargs)
+                else:
+                    func(p, *args[count:count + num_elements], **kwargs)
             count += num_elements
 
     def process(self, p, *args, **kwargs):
@@ -55,3 +59,6 @@ class Script(scripts.Script):
 
     def postprocess(self, p, *args, **kwargs):
         self.run_hook("postprocess", p, *args, **kwargs)
+
+    def postprocess_image(self, p, pp, *args, **kwargs):
+        self.run_hook("postprocess_image", p, extra=pp, *args, **kwargs)
