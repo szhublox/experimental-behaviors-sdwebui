@@ -13,6 +13,6 @@ class PromptEnhance:
             return
 
         for i, prompt in enumerate(p.all_prompts):
-            p.all_prompts[i] = re.sub(r'\[(.+):([.0-9]+)~([.0-9]+)\]',
+            p.all_prompts[i] = re.sub(r'\[([^\]]+):([.0-9]+)~([.0-9]+)\]',
                                       r'[:[\1::\3]:\2]',
                                       p.all_prompts[i])
