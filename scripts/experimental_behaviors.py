@@ -11,8 +11,8 @@ from scripts.script_ext.reverse_cfg import ReverseCFG
 from scripts.script_ext.skip_steps import SkipSteps
 from scripts.script_ext.warp_clip import WarpClip
 
-experiments = [DenoiseDest, DisableMean, ImageFlip, LatentCPU, PromptEnhance,
-               RandomTokens, ReverseCFG, SkipSteps, WarpClip]
+experiments = [DenoiseDest, DisableMean, ImageFlip, LatentCPU, RandomTokens,
+               ReverseCFG, SkipSteps, WarpClip, PromptEnhance]
 
 class Script(scripts.Script):
     def __init__(self):
